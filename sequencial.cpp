@@ -26,6 +26,7 @@ matrix multiply(const matrix &A, const matrix &B) {
 }
 
 void write_output(const matrix &result, long elapsed_us) {
+  mkdir("output", 0755);
   mkdir("output/sequencial", 0755);
 
   srand(time(NULL));
@@ -34,6 +35,7 @@ void write_output(const matrix &result, long elapsed_us) {
   sprintf(out_name, "output/sequencial/%04d.txt", rnum);
 
   FILE *out = fopen(out_name, "w");
+  if (!out) { perror("fopen output"); return; }
 
   int rows = result.size();
   int cols = result[0].size();
@@ -45,39 +47,44 @@ void write_output(const matrix &result, long elapsed_us) {
 
   fprintf(out, "%ld\n", elapsed_us);
 
-  // Numver of THREADS!!
-  fprintf(out, "1\n");
+  fprintf(out, "1\n"); // number of threads (sequential = 1)
   fclose(out);
 
   printf("Result written to %s\n", out_name);
 }
 
+matrix read_source(const char *name) {
+  FILE *source = fopen(name, "r");
+  if (!source) { perror(name); exit(1); }
+  matrix m;
+
+  char buffer[LINE_LENGTH];
+
+  while (fgets(buffer, LINE_LENGTH, source)) {
+    std::istringstream ss(buffer);
+    std::vector<int> row;
+    int value;
+
+    while (ss >> value) {
+      row.push_back(value);
+    }
+
+    if (!row.empty()) {
+      m.push_back(row);
+    }
+  }
+
+  fclose(source);
+  return m;
+}
+
 int main() {
-  FILE *sources[MATRIX_COUNT];
   matrix m[MATRIX_COUNT];
 
   for (int i = 0; i < MATRIX_COUNT; i++) {
     auto name = "matrix_" + std::to_string(i + 1) + ".txt";
 
-    sources[i] = fopen(name.c_str(), "r");
-
-    char buffer[LINE_LENGTH];
-
-    while (fgets(buffer, LINE_LENGTH, sources[i])) {
-      std::istringstream ss(buffer);
-      std::vector<int> row;
-      int value;
-
-      while (ss >> value) {
-        row.push_back(value);
-      }
-
-      if (!row.empty()) {
-        m[i].push_back(row);
-      }
-    }
-
-    fclose(sources[i]);
+    m[i] = read_source(name.c_str());
   }
 
   if (m[0].empty() || m[1].empty() || m[0][0].size() != m[1].size()) {

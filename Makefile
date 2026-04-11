@@ -1,5 +1,3 @@
-CMD_MAIN := main.cpp
-BIN_MAIN := main 
 
 CMD_AUX := aux.cpp
 BIN_AUX := aux
@@ -10,7 +8,10 @@ BIN_SEQ := sequencial
 BIN_THREADS := threads
 CMD_THREADS := threads.cpp
 
-.PHONY: sequencial sequencial-build sequencial-run aux aux-build aux-run threads threads-build threads-run
+CMD_PROCESS := process.cpp
+BIN_PROCESS := process 
+
+.PHONY: sequencial sequencial-build sequencial-run aux aux-build aux-run threads threads-build threads-run process process-build process-run
 
 sequencial: sequencial-build sequencial-run
 
@@ -38,6 +39,15 @@ threads-build:
 
 threads-run:
 	./dist/$(BIN_THREADS)
+
+process: process-build process-run
+
+process-build:
+	mkdir dist 2>/dev/null || true
+	clang++ $(CMD_PROCESS) -o ./dist/$(BIN_PROCESS)
+
+process-run:
+	./dist/$(BIN_PROCESS)
 
 %:
 	@:

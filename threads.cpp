@@ -35,6 +35,7 @@ void *multiply_rows(void *arg) {
 }
 
 void write_output(long elapsed_us, int num_threads) {
+  mkdir("output", 0755);
   mkdir("output/threads", 0755);
 
   srand(time(NULL));
@@ -43,6 +44,7 @@ void write_output(long elapsed_us, int num_threads) {
   sprintf(out_name, "output/threads/%04d.txt", rnum);
 
   FILE *out = fopen(out_name, "w");
+  if (!out) { perror("fopen output"); return; }
 
   int rows = C.size();
   int cols = C[0].size();
@@ -55,11 +57,35 @@ void write_output(long elapsed_us, int num_threads) {
 
   fprintf(out, "%ld\n", elapsed_us);
 
-  // Numver of THREADS!!
-  fprintf(out, "%d\n", num_threads);
+  fprintf(out, "%d\n", num_threads); // number of threads
   fclose(out);
 
   printf("Result written to %s\n", out_name);
+}
+
+matrix read_source(const char *name) {
+  FILE *source = fopen(name, "r");
+  if (!source) { perror(name); exit(1); }
+  matrix m;
+
+  char buffer[LINE_LENGTH];
+
+  while (fgets(buffer, LINE_LENGTH, source)) {
+    std::istringstream ss(buffer);
+    std::vector<int> row;
+    int value;
+
+    while (ss >> value) {
+      row.push_back(value);
+    }
+
+    if (!row.empty()) {
+      m.push_back(row);
+    }
+  }
+
+  fclose(source);
+  return m;
 }
 
 int main() {
@@ -67,25 +93,11 @@ int main() {
   printf("Number of threads: ");
   scanf("%d", &num_threads);
 
-  FILE *sources[MATRIX_COUNT];
   matrix m[MATRIX_COUNT];
 
   for (int i = 0; i < MATRIX_COUNT; i++) {
     auto name = "matrix_" + std::to_string(i + 1) + ".txt";
-    sources[i] = fopen(name.c_str(), "r");
-
-    char buffer[LINE_LENGTH];
-    while (fgets(buffer, LINE_LENGTH, sources[i])) {
-      std::istringstream ss(buffer);
-      std::vector<int> row;
-      int value;
-      while (ss >> value)
-        row.push_back(value);
-
-      if (!row.empty())
-        m[i].push_back(row);
-    }
-    fclose(sources[i]);
+    m[i] = read_source(name.c_str());
   }
 
   if (m[0].empty() || m[1].empty() || m[0][0].size() != m[1].size()) {

@@ -19,7 +19,7 @@ int main() {
   }
 
   // For A(n0 x m0) * B(n1 x m1), cols of A must equal rows of B
-  if (m[0] != n[1]) {
+  if (n[1] != m[0]) {
     std::cout << "Error: Matrix 1 has " << m[0] << " cols but Matrix 2 has "
               << n[1] << " rows — cannot multiply.\n";
     return 1;
